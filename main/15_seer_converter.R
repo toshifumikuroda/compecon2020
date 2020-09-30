@@ -7,7 +7,7 @@ SEER <- readr::read_tsv("./us.1969_2018.19ages.txt", col_names = FALSE)
 # 5 = 20-24, 
 # 17 = 80-84 years 18 = 85+ years
 SEER$year <- as.numeric(substr(SEER, 1, 4))
-SEER$state <- substr(SEER, 5, 6)
+SEER$stateabbr <- substr(SEER, 5, 6)
 SEER$race <- as.numeric(substr(SEER, 14, 14))
 SEER$age <- as.numeric(substr(SEER, 17, 18))
 SEER$population <- as.numeric(substr(SEER, 19, 26))
