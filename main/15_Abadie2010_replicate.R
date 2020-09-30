@@ -1,7 +1,7 @@
 # setup
 rm(list = ls())
-
-# ライブラリの読み込み
+## ggsciのインストール
+#install.packages("ggsci")
 library(ggsci)
 library(tidyverse)
 
@@ -35,9 +35,7 @@ DD %>% ggplot2::ggplot(aes(x = year, y = cigarette_consumption, group = state, c
   theme_bw() + scale_color_lancet()
 
 # figure 2
-## join data
-
-### GDP per capita
+## GDP per capita
 gdp_per_capita_1997 <- readr::read_csv("./data/bea/SAGDP2N__ALL_AREAS_1997_2019.csv")%>%
   tidyr::gather(year, value, starts_with("19"), starts_with("20")) %>%
   dplyr::mutate(value = value %>% as.numeric,
@@ -82,8 +80,6 @@ tobacco_long <- beer %>%
   dplyr::mutate(state = State, year = Year, beer = Beer) %>%
   dplyr::select(state, year, beer) %>%
   dplyr::right_join(tobacco_long, by= c("state", "year")) 
-
-# 
 
 # (7) Proposition99の分析：集計による分析
 ## データの準備
