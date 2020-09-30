@@ -1,21 +1,89 @@
 # setup
 rm(list = ls())
 
-# ライブラリのインストール(一度やれば良い)
-## Data Sets for Econometrics のインストール
-install.packages("Ecdat")
-
-## CausalImpact のインストール
-install.packages("Synth")
-
-## miceaddsのインストール
-install.packages("miceadds")
-
 # ライブラリの読み込み
-library(dplyr)
-library(Ecdat)
-# library(CausalImpact)
+library(ggsci)
+library(tidyverse)
 
+# データ読み込み
+tobacco <- readr::read_csv("./data/The_Tax_Burden_on_Tobacco__1970-2018.csv")
+tobacco_long <- tobacco %>% dplyr::select(c("LocationAbbr", "LocationDesc",  "Year", "SubMeasureDesc", "Data_Value")) %>%
+  tidyr::spread(., SubMeasureDesc,  Data_Value) %>%
+  dplyr::filter(Year <= 2000)
+
+names(tobacco_long) <- c("stateabbr", "state", "year", "average_cost_per_pack", "cigarette_consumption", "taxrate",
+                         "tax_amount", "taxrevenue", "state_tax_per_pack")
+# figure 1
+other_state <- tobacco_long %>%
+  dplyr::filter(stateabbr != "CA") %>%
+  dplyr::select(year, cigarette_consumption) %>%
+  dplyr::group_by(year) %>%
+  dplyr::summarize_all(mean) %>%
+  dplyr::mutate(state = "others")
+
+DD <- tobacco_long %>%
+  dplyr::filter(stateabbr == "CA") %>%
+  dplyr::bind_rows(., other_state)
+
+DD %>% ggplot2::ggplot(aes(x = year, y = cigarette_consumption, group = state, colour = state)) +
+  geom_line() + 
+  geom_point() +
+  theme(legend.position = "bottom") + 
+  ylim(0,140) +
+  geom_vline(xintercept = 1989) +
+  geom_text(aes(x = 1983, y = 40,  label = "Proposition 99 →")) +
+  theme_bw() + scale_color_lancet()
+
+# figure 2
+## join data
+
+### GDP per capita
+gdp_per_capita_1997 <- readr::read_csv("./data/bea/SAGDP2N__ALL_AREAS_1997_2019.csv")%>%
+  tidyr::gather(year, value, starts_with("19"), starts_with("20")) %>%
+  dplyr::mutate(value = value %>% as.numeric,
+                date = paste0(year, "-01-01") %>% as.Date) %>%
+  dplyr::filter(!is.na(value)) %>%
+  dplyr::filter(LineCode == 1& Region != "NA") %>%
+  dplyr::select(GeoName, year, value)
+
+gdp_per_capita_1963  <- readr::read_csv("./data/bea/SAGDP2S__ALL_AREAS_1963_1997.csv") %>%
+  tidyr::gather(year, value, starts_with("19"), starts_with("20")) %>%
+  dplyr::mutate(value = value %>% as.numeric,
+                date = paste0(year, "-01-01") %>% as.Date) %>%
+  dplyr::filter(!is.na(value)) %>%
+  dplyr::filter(LineCode == 1& Region != "NA") %>%
+  dplyr::select(GeoName, year, value)
+
+gdp_per_capita <- rbind(gdp_per_capita_1963, gdp_per_capita_1997) %>%
+  dplyr::rename(state = GeoName) %>%
+  dplyr::mutate(gdp_per_capita = value, year = as.numeric(year)) %>%
+  dplyr::select(state, year, gdp_per_capita)
+
+gdp_per_capita <- readr::read_csv("./data/CPI.csv") %>%
+  dplyr::rename(year = Year, cpi = Annual) %>%
+  dplyr::right_join(gdp_per_capita, by= c("year")) %>%
+  dplyr::mutate(real_gdp_per_capita = gdp_per_capita/cpi)
+
+rm(gdp_per_capita_1977, gdp_per_capita_1997)
+
+### SEER Population
+### yourth_population_rate_by_state.csv is too large to edit in R Studio Cloud Free. I edit it in local R.
+### Prease see 15_seer_converter.R 
+yourth_rate <- readr::read_csv("./data/yourth_population_rate_by_state.csv")
+tobacco_long <- yourth_rate %>%
+  dplyr::rename(stateabbr = state) %>%
+  dplyr::select(stateabbr, year, yourth_rate) %>%
+  dplyr::right_join(tobacco_long, by= c("stateabbr", "year")) 
+  
+### beer
+### beer data is manually copied from 
+beer <- readr::read_csv("./data/beer.csv")
+tobacco_long <- beer %>%
+  dplyr::mutate(state = State, year = Year, beer = Beer) %>%
+  dplyr::select(state, year, beer) %>%
+  dplyr::right_join(tobacco_long, by= c("state", "year")) 
+
+# 
 
 # (7) Proposition99の分析：集計による分析
 ## データの準備
