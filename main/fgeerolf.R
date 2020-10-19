@@ -2,13 +2,14 @@ pklist <- c("data.table", "tidyverse", "curl")
 source("https://fgeerolf.com/code/load-packages.R")
 setwd("./data/bea/")
 
+library(curl)
 ## SAINC: Annual Personal Income by State -------
 
 curl_download("https://apps.bea.gov/regional/zip/SAGDP.zip", 
-              destfile = "SAGDP.zip",
+              destfile = "./data/SAGDP.zip",
               quiet = FALSE)
 
-unzip("SAGDP.zip")
+unzip("./data/SAGDP.zip", exdir = "./data/test")
 
 # SAGDP ---------
 

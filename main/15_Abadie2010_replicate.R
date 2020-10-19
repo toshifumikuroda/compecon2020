@@ -1,11 +1,10 @@
 # setup
 rm(list = ls())
-## ggsciのインストール
-#install.packages("ggsci")
+
+# ライブラリ読み込み
 library(ggsci)
 library(tidyverse)
 library(psych)
-
 
 # データ読み込み
 tobacco <- readr::read_csv("./data/The_Tax_Burden_on_Tobacco__1970-2018.csv")
