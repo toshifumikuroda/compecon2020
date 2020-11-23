@@ -4,7 +4,6 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 library(estimatr)
-library(huxtable)
 library(xtable)
 library(Matching)
 library(gridExtra)
@@ -160,18 +159,18 @@ gridExtra::grid.arrange(fig3_before, fig3_match, fig3_caliper, ncol = 3)
 
 # Table 3
 table_3 <- c()
-for(i in outcomeindex[2:length(outcomeindex)]) {
+for(i in outcomeindex[2:length(outcomeindex)]) { # 結果変数についてのループ
   row <- c()
-  mathed_reg <- matched %>% 
+  mathed_reg <- matched %>% # データの絞り込み
     tidyr::drop_na(c(colnames(matched)[i], AC_type_noST))
   OLS <- estimatr::lm_robust(data = mathed_reg, 
                                formula = as.formula(paste(c(toString(colnames(mathed_reg)[i]),"~ AC_type_noST"), collapse="")), 
                                clusters = State_no_2001_old,
-                               se_type = "stata")
-  row_1 <- round(OLS$coef[2],2)
-  row_2 <- ifelse(OLS[["p.value"]][2]<0.01, "<0.01", 	round(OLS[["p.value"]][2],2))
+                               se_type = "stata") #lm_robustを利用した回帰による差の検定
+  row_1 <- round(OLS$coef[2],2) # 二群の差の平均値
+  row_2 <- ifelse(OLS[["p.value"]][2]<0.01, "<0.01", 	round(OLS[["p.value"]][2],2)) # 検定統計量
   
-  matched_withcaliper_reg <- matched_withcaliper %>% 
+  matched_withcaliper_reg <- matched_withcaliper %>% # データの絞り込み for with calieperでのマッチ
     tidyr::drop_na(c(colnames(outcomeindex)[i], AC_type_noST))
   OLS_withcaliper <- estimatr::lm_robust(data = matched_withcaliper_reg, 
                              formula = as.formula(paste(c(toString(colnames(mathed_reg)[i]),"~ AC_type_noST"), collapse="")), 
@@ -180,7 +179,7 @@ for(i in outcomeindex[2:length(outcomeindex)]) {
   row_3 <- round(OLS_withcaliper$coef[2],2)
   row_4 <- ifelse(OLS_withcaliper[["p.value"]][2]<0.01, "<0.01", 	round(OLS_withcaliper[["p.value"]][2],2))
   
-  OLS_withcaliper <- estimatr::lm_robust(data = matched_withcaliper_reg, 
+  OLS_with_reg <- estimatr::lm_robust(data = matched_withcaliper_reg, 
                                          formula = as.formula(paste(c(toString(colnames(mathed_reg)[i]),
                                                                       "~ AC_type_noST + SC_pop71_true"), collapse="")), 
                                          clusters = State_no_2001_old,
