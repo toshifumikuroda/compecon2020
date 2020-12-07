@@ -184,8 +184,8 @@ for(i in outcomeindex[2:length(outcomeindex)]) { # 結果変数についての�
                                                                       "~ AC_type_noST + SC_pop71_true"), collapse="")), 
                                          clusters = State_no_2001_old,
                                          se_type = "stata")
-  row_5 <- round(OLS_withcaliper$coef[2],2)
-  row_6 <- ifelse(OLS_withcaliper[["p.value"]][2]<0.01, "<0.01", 	round(OLS_withcaliper[["p.value"]][2],2))
+  row_5 <- round(OLS_with_reg$coef[2],2)
+  row_6 <- ifelse(OLS_with_reg[["p.value"]][2]<0.01, "<0.01", 	round(OLS_with_reg[["p.value"]][2],2))
   row <- cbind(row_1, row_2, row_3, row_4, row_5, row_6)
   table_3 <- rbind(table_3, row)
 }
