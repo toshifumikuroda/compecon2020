@@ -8,6 +8,7 @@ library(hdm)
 library(huxtable)
 library(AER)
 library(xtable)
+library(nnet)
 
 ## 初期設定
 rm(list = ls())
@@ -411,3 +412,59 @@ table4_c <- huxtable::huxreg("Base sample" = table4_c_col1, table4_c_col2,
   huxtable::set_caption(paste0("Panel C: Ordinary Least Squares made by ",author))
 cat(huxtable::to_html(table4_c), 
     file = "figuretable/24_AJR_table4_c.html")
+
+# Chernozhukov et al. (2018)
+## download data and Rscript
+download.file("https://onlinelibrary.wiley.com/action/downloadSupplement?doi=10.1111%2Fectj.12097&file=ectj12097-sup-0001-ReplicationFiles.zip",
+              "./data/24_AJR/ectj12097-sup-0001-ReplicationFiles.zip")
+
+## Unzip
+unzip(zipfile = "./data/24_AJR/ectj12097-sup-0001-ReplicationFiles.zip", exdir = "./data/24_AJR/")
+unzip(zipfile = "./data/24_AJR/12097/Econometrics Journal_updated_01_07_18.zip", exdir = "./data/24_AJR/")
+
+## load Rscript for Double ML
+setwd("./data/24_AJR/Econometrics Journal_updated_01_07_18/AJR/")
+source("ML_Functions.R")  
+source("Moment_Functions.R")  
+setwd("../../../../")
+
+set.seed(12345);
+
+## Data Set
+data(AJR); 
+data <- AJR
+y  <- "GDP"
+d  <- "Exprop"
+z  <- "logMort"	
+x  <- "Latitude + Latitude2 + Africa +  Asia + Namer + Samer"
+xl <- "(Latitude + Latitude2 + Africa +  Asia + Namer + Samer)^2"
+
+## Set DML to use Nnet
+Nnet         <- list(size=2,  maxit=1000, decay=0.01, MaxNWts=10000,  trace=FALSE)
+arguments    <- list(Nnet=Nnet)
+methods      <- c("Nnet")
+split        <- 1000
+
+## Bootstrapping
+r <- c()
+for (k in 1:split) {
+  dml <- DoubleML(data=data, y=y, d=d, z=z, xx=x, xL=xl, methods=methods, DML="DML2", nfold=2, est="IV", arguments=arguments, silent=TRUE, trim=NULL)
+  r <- rbind(r, dml[1,])
+}
+
+## table 5
+result           <- matrix(0, 2, 1)
+colnames(result) <- cbind(t(methods))
+rownames(result) <- cbind("Coefficient", "se")
+
+result[1,] <- quantile(r, probs=0.5)
+result[2,] <- sd(r)/sqrt(length(r))
+result_table <- round(result, digits = 2)
+
+print(
+  xtable(result_table, align=c("l", "r"), 
+         caption=paste0("Estimated effect of institutions on output using DNN made by ",author),
+         format.args = list(big.mark = " ", decimal.mark = ",")),
+  type = "html",
+  file = "figuretable/24_AJR_table5.html"
+  )
