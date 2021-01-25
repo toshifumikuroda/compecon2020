@@ -2,6 +2,13 @@ rm(list = ls())
 # import tidyverse
 library(tidyverse)
 
+# download covid19 data
+download.file("https://dl.dropboxusercontent.com/s/6mztoeb6xf78g5w/COVID-19.csv",
+              "./data/COVID-19.csv")
+
+# Create Data Folder
+dir.create(data)
+
 # read covid19 data
 covid_19 <- readr::read_csv("./data/COVID-19.csv")
 
