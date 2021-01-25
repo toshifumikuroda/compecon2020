@@ -2,7 +2,7 @@ rm(list = ls())
 # import tidyverse
 library(tidyverse)
 
-# Create Data Folder
+# Create Data Folder commit
 dir.create("data")
 
 # download covid19 data
